@@ -128,8 +128,8 @@ def Sendtext4TaskApi(taskname: str):
 
 
 @app.get('/SearchKey4task')
-def SearchKey4taskApi(taskname: str, key: str):
-    logger.info(f"搜索关键词, taskname : {taskname}, key : {key}")
+def SearchKey4taskApi(taskname: str, key: str=None):
+    logger.info(f"搜索关键词, taskname : {taskname}")
     res: ManageText = manage_task.AllTask.get(taskname).manage_text
     res:List[str] = res.SearchKey(key=key)
     return res
@@ -151,6 +151,11 @@ def SaveResult4TaskApi(taskname: str,
     project.SaveResult(textinput)
     return asdict(OperateOutput(info='成功提交'))
 
+@app.get("/RemainTextN4Task")
+def RemainTextN4TaskApi(taskname:str):
+    project = manage_task.AllTask.get(taskname).manage_text
+    res = project.remained_text_number
+    return res 
 
 
 
@@ -159,7 +164,9 @@ def SaveResult4TaskApi(taskname: str,
 async def root():
     return {"message": "Hello World", "datetime": datetime.now(), "test": 'this is a test'}
 
+
+
 if __name__ == '__main__':
     print(app_port)
     uvicorn.run(app='backapp:app', host="0.0.0.0",
-                port=app_port, reload=False, debug=True)
+                port=app_port, reload=False, debug=False)

@@ -190,11 +190,11 @@ class ManageText:
         return label_score
 
     
-    def SearchKey(self, key:str) -> list[str]:
+    def SearchKey(self, key:str=None) -> list[str]:
         """
         通过关键词查找
         """
-        result = [i for i in self.global_label if i.find(key) != -1]
+        result = self.add_label#[i for i in self.global_label if i.find(key) != -1]
         return result
 
     def SaveResult(self, save_text: SaveTextInput):

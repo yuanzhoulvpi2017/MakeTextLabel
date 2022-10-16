@@ -133,5 +133,6 @@ dmypy.json
 users
 test.csv
 mycode.ipynb 
+testcode.ipynb 
 
 data/result/ALLRESULT.csv
