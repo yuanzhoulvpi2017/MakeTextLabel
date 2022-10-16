@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
-from unicodedata import name
 
 import pandas as pd
 import os
@@ -166,7 +165,7 @@ class ManageUser:
                     else:
                         return DetectUserStatusOutput(userstatus=UserStatus.LEAVE)
             else:
-                return DetectUserStatusOutput()
+                return DetectUserStatusOutput(status=ActiveStatus.ERROR,info='不存在该用户')
 
         else:
             return DetectUserStatusOutput(status=ActiveStatus.ERROR, info='不存在该用户')

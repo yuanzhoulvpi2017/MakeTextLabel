@@ -43,7 +43,7 @@ class SaveTextInput:
     project:str 
     text: str
     label: str
-    text_status: LabelStatus
+    # text_status: LabelStatus
     label_user: str
     label_datetime: datetime
 
@@ -79,7 +79,7 @@ class TextSave:
     @property
     def Len(self) -> int:
         return len(self.AllText)
-        
+      
 
 
 class ManageText:
@@ -166,8 +166,8 @@ class ManageText:
         """
 
         cur_text = self.text_list.GetElement
-        if cur_text is not None:
 
+        if cur_text is not None:
             simi_list = self.GetSimilarList(cur_text)
             return SendTextOutput(text_status=TextStatus.FULL,need2labeltext=cur_text, similar_label=simi_list)
         else:
@@ -199,38 +199,19 @@ class ManageText:
         """
         保存结果
         """
-        if save_text.text_status == LabelStatus.SUCCESS:
-            self.text_list.DropElement(save_text.text)
+        
+        self.text_list.DropElement(save_text.text)
 
-            with open(self.ALLRESULT_PATH, 'a') as f_In:
-                dictwrite_object = DictWriter(
-                    f_In, fieldnames=self.save_csv_header)
-                result = asdict(save_text)
-                result.pop('text_status')
-                dictwrite_object.writerow(result)
-
-
+        with open(self.ALLRESULT_PATH, 'a') as f_In:
+            dictwrite_object = DictWriter(
+                f_In, fieldnames=self.save_csv_header)
+            result = asdict(save_text)
+            # result.pop('text_status')
+            dictwrite_object.writerow(result)
 
 
 
 
 
 
-
-    
-
-
-# if __name__ == '__main__':
-#     model = SentenceTransformer(
-#     model_name_or_path="hfl/chinese-roberta-wwm-ext", device='cuda')
-
-
-#     MT = ManageText(project_name='hellworld', model=model)
-#     MT.init_text(text_list=['北京大学', '清华大学', '中国科学技术大学', '安徽工程大学', '安徽大学', '安徽师范大学'])
-#     MT.InitLabel(label_list=['北京', '芜湖'])
-#     MT.SaveResult(save_text=SaveTextInput(project='default',text='北大', label='北京', text_status=LabelStatus.SUCCESS, label_user='yuanz', label_datetime=datetime.now()))
-
-#     testoutput = MT.SendText
-#     print(testoutput)
-    
     
