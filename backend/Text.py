@@ -8,10 +8,10 @@ import numpy as np
 from sentence_transformers.util import cos_sim
 import logging
 import os
-import torch as t
+# import torch as t
 from pathlib import Path
 
-from torch import Tensor
+# from torch import Tensor
 from csv import DictWriter
 
 
@@ -36,6 +36,7 @@ class LabelStatus:
 @dataclass
 class SaveTextInput:
 
+    project:str 
     text: str
     label: str
     text_status: LabelStatus
@@ -44,7 +45,8 @@ class SaveTextInput:
 
 
 class ManageText:
-    def __init__(self) -> None:
+    def __init__(self, project_name) -> None:
+        self.PROJECT_NAME = project_name
         self.data_file_dir = Path(__file__).parent.parent.joinpath('data')
         self.result_dir = self.data_file_dir.joinpath("result")
         self.text_dir = self.data_file_dir.joinpath("text")
@@ -58,7 +60,7 @@ class ManageText:
 
         self.text_list: List[str] = []
 
-        self.save_csv_header = ['text', 'label',
+        self.save_csv_header = ['project','text', 'label',
                                 'label_user', 'label_datetime']
 
 
@@ -165,10 +167,10 @@ class ManageText:
 
 
 if __name__ == '__main__':
-    MT = ManageText()
+    MT = ManageText(project_name='hellworld')
     MT.init_text(text_list=['北京大学', '清华大学', '中国科学技术大学', '安徽工程大学', '安徽大学', '安徽师范大学'])
     MT.InitLabel(label_list=['北京', '芜湖'])
-    MT.SaveResult(save_text=SaveTextInput(text='北大', label='北京', text_status=LabelStatus.SUCCESS, label_user='yuanz', label_datetime=datetime.now()))
+    MT.SaveResult(save_text=SaveTextInput(project='default',text='北大', label='北京', text_status=LabelStatus.SUCCESS, label_user='yuanz', label_datetime=datetime.now()))
 
     testoutput = MT.SendText
     print(testoutput)
