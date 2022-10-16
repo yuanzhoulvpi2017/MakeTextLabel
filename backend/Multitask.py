@@ -1,5 +1,5 @@
 from typing import Dict, List
-from Text import ManageText
+from .Text import ManageText
 
 from datetime import datetime
 
@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from sentence_transformers import SentenceTransformer
 
+from enum import Enum
 
 @dataclass
 class Task:
@@ -15,8 +16,8 @@ class Task:
     manage_text: ManageText
 
 
-@dataclass
-class OperateStatus:
+
+class OperateStatus(Enum):
     SUCCESS = 1
     ERROR = 2
 
@@ -25,6 +26,12 @@ class OperateStatus:
 class OperateOutput:
     status: OperateStatus = field(default=OperateStatus.SUCCESS)
     info: str = field(default='操作成功')
+
+    # def to_dict(self):
+    #     return {
+    #         'status':
+    #     }
+
 
 
 class ManageTask:
@@ -46,7 +53,7 @@ class ManageTask:
 
                 return OperateOutput()
             else:
-                OperateOutput(
+                return OperateOutput(
                     status=OperateStatus.ERROR,
                     info='项目名称已经存在,不可再创建'
                 )
@@ -67,7 +74,7 @@ class ManageTask:
                     info='未找到此项目')
             else:
                 self.AllTask.pop(taskname)
-                OperateOutput(
+                return OperateOutput(
                     status=OperateStatus.SUCCESS,
                     info='已成功删除项目'
                 )

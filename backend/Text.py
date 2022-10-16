@@ -21,8 +21,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TextStatus:
-    EMPTY = 1
-    FULL = 2
+    FULL = 1
+    EMPTY = 2
+    
 
 @dataclass
 class SendTextOutput:
@@ -127,17 +128,18 @@ class ManageText:
         添加新的标签
         """
         logger.info("添加新的标签")
-        self.global_label = self.global_label + label_list
-        temp_label_encoding = self.model.encode(label_list)
-        self.global_label_encoding = np.concatenate(
-            [self.global_label_encoding, temp_label_encoding])
+        self.global_label = list(set(self.global_label + label_list))
+        # temp_label_encoding = self.model.encode(label_list)
+        # self.global_label_encoding = np.concatenate(
+        #     [self.global_label_encoding, temp_label_encoding])
+        self.global_label_encoding = self.model.encode(label_list)
 
     def delete_label(self, label_list: List[str]):
         """
         删除label
         """
         logger.info("删除标签")
-        for temp_label in label_list:
+        for temp_label in list(set(label_list)):
             if temp_label in self.global_label:
 
                 index = self.global_label.index(temp_label)
