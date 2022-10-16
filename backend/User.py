@@ -8,6 +8,8 @@ import os
 from datetime import datetime
 
 from pathlib import Path
+import streamlit_authenticator as stauth
+import yaml
 
 
 class UserStatus(Enum):
@@ -57,6 +59,7 @@ class UserInfo:
 
 class ManageUser:
     def __init__(self) -> None:
+        self.adminyaml()
         user_path = Path(__file__).parent.parent.joinpath('users')
         self.user_df_file = user_path.joinpath("users.csv")
         os.makedirs(name=user_path, exist_ok=True)
@@ -118,6 +121,7 @@ class ManageUser:
                           leave_time=datetime.now())
 
         self.all_user_list.append(c_user)
+        self.reflashyamlfile
 
         self.data_2_file
 
@@ -136,10 +140,13 @@ class ManageUser:
                         temp_user.status = UserStatus.LEAVE
                         temp_user.leave_time = datetime.now()
                         self.data_2_file
+                        self.reflashyamlfile
                         return ActiveOutput()
                     else:
+                        self.data_2_file
                         return ActiveOutput(status=ActiveStatus.ERROR, info="用户已经离开, 不可以再次让其离开")
             else:
+                self.data_2_file
                 return ActiveOutput(status=ActiveStatus.ERROR, info="未找到该用户")
 
         else:
@@ -165,15 +172,109 @@ class ManageUser:
             return DetectUserStatusOutput(status=ActiveStatus.ERROR, info='不存在该用户')
 
     @property
-    def data_2_file(self):
+    def data_2_file(self) -> None:
         user_df_save = pd.concat(
             [i.to_dataframe() for i in self.all_user_list]).reset_index(drop=True)
         user_df_save.to_csv(self.user_df_file, index=False)
+
+        self.reflashyamlfile
+
+    @property
+    def reflashyamlfile(self) -> None:
+
+        with open(Path(__file__).parent.parent.joinpath('admin.yaml'), 'r') as f:
+            admin_detail = yaml.load(f, Loader=yaml.SafeLoader)
+
+        admin_name = admin_detail.get('admin').get('name')
+        admin_password = admin_detail.get('admin').get('password')
+        active_user_list = [
+            i for i in self.all_user_list if i.status == UserStatus.ACTIVATE]
+
+        if len(active_user_list) != 0:
+            usernamelist = [admin_name] + [i.name for i in active_user_list]
+            password = [admin_password] + \
+                [i.password for i in active_user_list]
+
+            user2yaml(userlist=usernamelist, password=password)
+        else:
+            usernamelist = [admin_name]
+            password = [admin_password]
+            user2yaml(userlist=usernamelist, password=password)
+
+    def adminyaml(self):
+
+        with open(Path(__file__).parent.parent.joinpath('admin.yaml'), 'r') as f:
+            admin_detail = yaml.load(f, Loader=yaml.SafeLoader)
+
+        admin_name = admin_detail.get('admin').get('name')
+        admin_password = admin_detail.get('admin').get('password')
+
+        userlist = [admin_name]
+        hashed_passwords = stauth.Hasher(admin_password).generate()
+
+        user_config = {
+            'credentials': {
+                'usernames': {
+
+                    k: {
+                        'email': f'{k}@xiaoshiwole.com',
+                        'name': k,
+                        'password': p
+                    } for k, p in zip(userlist, hashed_passwords)
+                }
+            },
+            'cookie': {
+                'expiry_days': 9999,
+                'key': 'some_signature_key',
+                'name': 'some_cookie_name'
+            },
+            'preauthorized': {
+                'emails': 'yuanzhoulvpi@outlook.com'
+            }
+
+        }
+        f = open(Path(__file__).parent.parent.joinpath(
+            'users/adminconfig.yaml'), 'w+')
+        yaml.dump(user_config, f, allow_unicode=True)
+
+
+def user2yaml(userlist: List[str], password: List[str]):
+
+    hashed_passwords = stauth.Hasher(password).generate()
+
+    user_config = {
+        'credentials': {
+            'usernames': {
+
+                k: {
+                    'email': f'{k}@xiaoshiwole.com',
+                    'name': k,
+                    'password': p
+                } for k, p in zip(userlist, hashed_passwords)
+            }
+        },
+        'cookie': {
+            'expiry_days': 9999,
+            'key': 'some_signature_key',
+            'name': 'some_cookie_name'
+        },
+        'preauthorized': {
+            'emails': 'yuanzhoulvpi@outlook.com'
+        }
+
+    }
+    f = open(Path(__file__).parent.parent.joinpath(
+        'users/labeluserconfig.yaml'), 'w+')
+    yaml.dump(user_config, f, allow_unicode=True)
 
 
 if __name__ == '__main__':
     manage_user = ManageUser()
     manage_user.create_user(user_name='yuanz2021',
+                            user_password='hangzhoudata2021')
+    manage_user.create_user(user_name='yuanz2022',
+                            user_password='hangzhoudata2021')
+    manage_user.create_user(user_name='yuanz2023',
                             user_password='hangzhoudata2021')
     # manage_user.create_user(user_name='yuanz2022',
     #                         user_password='hangzhoudata2022')
@@ -182,5 +283,6 @@ if __name__ == '__main__':
     # manage_user.create_user(user_name='yuanz2024',
     #                         user_password='hangzhoudata2024')
 
-    manage_user.delete_user(user_name='yuanz2023')
-    manage_user.delete_user(user_name='yuanz2024')
+    manage_user.delete_user(user_name='yuanz2021')
+    manage_user.delete_user(user_name='yuanz2022')
+    # manage_user.delete_user(user_name='yuanz2023')

@@ -19,6 +19,37 @@ st.set_page_config(
 st.markdown("# 打标界面")
 
 
+# import streamlit as st
+# import streamlit_authenticator as stauth
+# import yaml
+# from pathlib import Path
+
+# with open(Path(__file__).parent.parent.joinpath('users/labeluserconfig.yaml')) as file:
+#     config = yaml.load(file, Loader=yaml.SafeLoader)
+
+# # with open('../config.yaml') as file:
+# #     config = yaml.load(file, Loader=SafeLoader)
+
+# authenticator = stauth.Authenticate(
+#     config['credentials'],
+#     config['cookie']['name'],
+#     config['cookie']['key'],
+#     config['cookie']['expiry_days'],
+#     config['preauthorized']
+# )
+
+
+# name, authentication_status, username = authenticator.login('Login', 'main')
+
+# if authentication_status:
+#     authenticator.logout('Logout', 'main')
+#     st.write(f'Welcome *{name}*')
+#     st.title('Some content')
+# elif authentication_status == False:
+#     st.error('Username/password is incorrect')
+# elif authentication_status == None:
+#     st.warning('Please enter your username and password')
+
 with st.form(key="login_01"):
     with st.expander(label="01_登录&选择项目", expanded=True):
 
