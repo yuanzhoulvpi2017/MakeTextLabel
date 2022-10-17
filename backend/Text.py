@@ -13,8 +13,8 @@ import random
 # from torch import Tensor
 from csv import DictWriter
 
-
 logger = logging.getLogger(__name__)
+
 
 # model = SentenceTransformer(
 #     model_name_or_path="hfl/chinese-roberta-wwm-ext", device='cuda')
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class TextStatus:
     FULL = 1
     EMPTY = 2
-    
+
 
 @dataclass
 class SendTextOutput:
@@ -40,19 +40,19 @@ class LabelStatus:
 
 @dataclass
 class SaveTextInput:
-
-    project:str 
+    project: str
     text: str
     label: str
     # text_status: LabelStatus
     label_user: str
     label_datetime: datetime
 
+
 class TextSave:
     def __init__(self) -> None:
-        self.AllText :List[str] = []
+        self.AllText: List[str] = []
 
-    def Add(self, newtext:Union[List[str], str]):
+    def Add(self, newtext: Union[List[str], str]):
         if isinstance(newtext, str):
             newtext = [newtext]
 
@@ -60,7 +60,7 @@ class TextSave:
             self.AllText = newtext
         else:
             self.AllText = list(set(self.AllText + newtext))
-    
+
     @property
     def GetElement(self) -> str:
         if len(self.AllText) > 0:
@@ -69,22 +69,21 @@ class TextSave:
             return element
         else:
             return None
-    
-    def DropElement(self, element:str) -> None:
+
+    def DropElement(self, element: str) -> None:
         try:
             index = self.AllText.index(element)
-            self.AllText.drop(index)
+            self.AllText.pop(index)
         except Exception as e:
             pass
 
     @property
     def Len(self) -> int:
         return len(self.AllText)
-      
 
 
 class ManageText:
-    def __init__(self, project_name:str, model:SentenceTransformer) -> None:
+    def __init__(self, project_name: str, model: SentenceTransformer) -> None:
         self.model = model
         self.PROJECT_NAME = project_name
         self.data_file_dir = Path(__file__).parent.parent.joinpath('data')
@@ -102,18 +101,16 @@ class ManageText:
 
         self.text_list = TextSave()
 
-        self.save_csv_header = ['project','text', 'label',
+        self.save_csv_header = ['project', 'text', 'label',
                                 'label_user', 'label_datetime']
-
 
         self.ALLRESULT_PATH = self.result_dir.joinpath('ALLRESULT.csv')
         if not self.ALLRESULT_PATH.exists():
             with open(self.ALLRESULT_PATH, 'a') as f_In:
                 dictwrite_object = DictWriter(
                     f_In, fieldnames=self.save_csv_header)
-                result = {i:i for i in self.save_csv_header}
+                result = {i: i for i in self.save_csv_header}
                 dictwrite_object.writerow(result)
-
 
     def InitLabel(self, label_list: List[str]):
         """
@@ -141,7 +138,6 @@ class ManageText:
         logger.info("删除标签")
         for temp_label in list(set(label_list)):
             if temp_label in self.global_label:
-
                 index = self.global_label.index(temp_label)
                 self.global_label.pop(index)
                 self.global_label_encoding = np.delete(
@@ -171,7 +167,7 @@ class ManageText:
 
         if cur_text is not None:
             simi_list = self.GetSimilarList(cur_text)
-            return SendTextOutput(text_status=TextStatus.FULL,need2labeltext=cur_text, similar_label=simi_list)
+            return SendTextOutput(text_status=TextStatus.FULL, need2labeltext=cur_text, similar_label=simi_list)
         else:
             return SendTextOutput(text_status=TextStatus.EMPTY, similar_label=[], need2labeltext='')
 
@@ -189,19 +185,18 @@ class ManageText:
         )['label'].tolist()
         return label_score
 
-    
-    def SearchKey(self, key:str=None) -> list[str]:
+    def SearchKey(self) -> list[str]:
         """
         通过关键词查找
         """
-        result = self.add_label#[i for i in self.global_label if i.find(key) != -1]
+        result = self.global_label  # [i for i in self.global_label if i.find(key) != -1]
         return result
 
     def SaveResult(self, save_text: SaveTextInput):
         """
         保存结果
         """
-        
+
         self.text_list.DropElement(save_text.text)
 
         with open(self.ALLRESULT_PATH, 'a') as f_In:
@@ -216,4 +211,4 @@ class ManageText:
 
 
 
-    
+

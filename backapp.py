@@ -12,6 +12,7 @@ from backend.Text import ManageText, SaveTextInput
 from backend.Multitask import ManageTask, OperateOutput, OperateStatus
 import logging
 logger = logging.getLogger(__name__)
+import torch as t
 
 
 
@@ -20,7 +21,7 @@ with open(Path(__file__).parent.joinpath('admin.yaml'), 'r') as f:
     app_port = int(admin_detail.get('port'))
 
 model = SentenceTransformer(
-    model_name_or_path="hfl/chinese-roberta-wwm-ext", device='cpu')
+    model_name_or_path="/home/user_huzheng/documents/MakeTextLabel/hf", device='cuda' if t.cuda.is_available() else 'cpu')
 
 
 manage_user = ManageUser()
@@ -128,10 +129,10 @@ def Sendtext4TaskApi(taskname: str):
 
 
 @app.get('/SearchKey4task')
-def SearchKey4taskApi(taskname: str, key: str=None):
+def SearchKey4taskApi(taskname: str):
     logger.info(f"搜索关键词, taskname : {taskname}")
     res: ManageText = manage_task.AllTask.get(taskname).manage_text
-    res:List[str] = res.SearchKey(key=key)
+    res:List[str] = res.SearchKey()
     return res
 
 

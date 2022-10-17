@@ -1,3 +1,4 @@
+from asyncio import selector_events
 from urllib import response
 import streamlit as st
 from datetime import datetime
@@ -7,9 +8,9 @@ import pandas as pd
 import random
 import requests
 import os
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from io import BytesIO
+# import plotly.graph_objects as go
+# from plotly.subplots import make_subplots
+# from io import BytesIO
 
 import yaml
 from pathlib import Path
@@ -17,45 +18,33 @@ import socket
 import requests
 from typing import List
 
-st.set_page_config(
-    page_title="LabelUser",
-    page_icon="😎",
-    layout="wide",
-    initial_sidebar_state="expanded",
+# import streamlit as st
+import streamlit_authenticator as stauth
+import yaml
+from pathlib import Path
+
+# st.set_page_config(
+#     page_title="LabelUser",
+#     page_icon="😎",
+#     layout="wide",
+#     initial_sidebar_state="expanded",
+# )
+with open(Path(__file__).parent.parent.joinpath('users/labeluserconfig.yaml')) as file:
+    config = yaml.load(file, Loader=yaml.SafeLoader)
+
+# with open('../config.yaml') as file:
+#     config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
 )
+
 st.markdown("# 打标界面")
 
-
-# import streamlit as st
-# import streamlit_authenticator as stauth
-# import yaml
-# from pathlib import Path
-
-# with open(Path(__file__).parent.parent.joinpath('users/labeluserconfig.yaml')) as file:
-#     config = yaml.load(file, Loader=yaml.SafeLoader)
-
-# # with open('../config.yaml') as file:
-# #     config = yaml.load(file, Loader=SafeLoader)
-
-# authenticator = stauth.Authenticate(
-#     config['credentials'],
-#     config['cookie']['name'],
-#     config['cookie']['key'],
-#     config['cookie']['expiry_days'],
-#     config['preauthorized']
-# )
-
-
-# name, authentication_status, username = authenticator.login('Login', 'main')
-
-# if authentication_status:
-#     authenticator.logout('Logout', 'main')
-#     st.write(f'Welcome *{name}*')
-#     st.title('Some content')
-# elif authentication_status == False:
-#     st.error('Username/password is incorrect')
-# elif authentication_status == None:
-#     st.warning('Please enter your username and password')
 
 class ConnectBackLabel:
     def __init__(self, names: str) -> None:
@@ -87,7 +76,7 @@ class ConnectBackLabel:
         return web.json()
 
     # @property
-    def get_label(project_name: str, self) -> List[str]:
+    def get_label(self, project_name: str) -> List[str]:
         """
         获得标签
         """
@@ -97,7 +86,6 @@ class ConnectBackLabel:
 
         params = {
             'taskname': project_name,
-            'key': 'love',
         }
         url = ''.join([self.url_base, 'SearchKey4task'])
         response = requests.get(url=url, params=params, headers=headers)
@@ -110,7 +98,6 @@ class ConnectBackLabel:
     #     return self.ALL_Label
 
     def get_text(self, project_name: str):
-
         headers = {
             'accept': 'application/json',
         }
@@ -122,7 +109,7 @@ class ConnectBackLabel:
         response = requests.get(url=url, params=params, headers=headers)
         return response.json()
 
-    def save_result(self, project_name: str, text: str, label: str):
+    def save_result(self, project_name: str, text: str, label: str, username: str):
         headers = {
             'accept': 'application/json',
         }
@@ -131,73 +118,137 @@ class ConnectBackLabel:
             'taskname': project_name,
             'text': text,
             'label': label,
-            'label_user': self.names
+            'label_user': username
         }
         url = ''.join([self.url_base, 'SaveResult4Task'])
         response = requests.get(url=url, params=params, headers=headers)
         return response.json()
 
 
-conback2 = ConnectBackLabel(names='hellouser1')
+name, authentication_status, username = authenticator.login('Login', 'main')
 
-if st.session_state.get('conback2_value', None) is None:
-    st.session_state.conback2 = conback2
-    st.session_state.value_project_list = st.session_state.conback2.get_project_list
+if authentication_status:
+    if st.session_state.get('global_username', None) is None:
+        st.session_state.global_username = name
+    if st.session_state.get('conback2_value', None) is None:
+        st.session_state.conback2_value = ConnectBackLabel(names=st.session_state.get('global_username'))
 
-    # if st.session_state.get('04_modify_project_name', None) is None:
-    #     project_name = 
+    if st.session_state.get('text_button_01') is None:
+        st.session_state.text_button_01 = ''
+    if st.session_state.get('simi_button_02') is None:
+        st.session_state.simi_button_02 = []
 
-    st.session_state.plt_value = st.session_state.conback2.get_text('proj2000')
-    if st.session_state.plt_value.get('text_status', None) == 1:
+    if st.session_state.get('pair_text_label') is None:
+        st.session_state.pair_text_label = {
+            'need2labeltext': '', 'similar_label': []}
 
-        st.session_state.plt_value_text = st.session_state.plt_value.get(
-            'need2labeltext', None)
-        st.session_state.plt_vlaue_similist = st.session_state.plt_value.get(
-            'similar_label', None)
+    if st.session_state.get('alllabel') is None:
+        st.session_state.alllabel = []
+
+    project_name_list = st.session_state.conback2_value.get_project_list
+
+    if project_name_list is not None and len(project_name_list) == 0:
+        st.success('芜湖~ 当前没有任何项目')
+    else:
+
+        with st.form(key="dabiao"):
+
+            st.markdown("## 1. 项目部分")
+            st.selectbox(label='选择项目', options=project_name_list,
+                         key='01select_project_value')
 
 
-def Update_Conback():
-    st.session_state.plt_value = st.session_state.conback2.get_text('proj2000')
-    if st.session_state.plt_value.get('text_status', None) == 1:
+            def pjl():
+                # 选好项目，点击确定，然后更新文本内容
+                st.session_state.pair_text_label = st.session_state.conback2_value.get_text(
+                    project_name=st.session_state.get('01select_project_value')
+                )
+                st.session_state.text_button_01 = st.session_state.pair_text_label.get(
+                    'need2labeltext', '')
+                st.session_state.simi_button_02 = st.session_state.pair_text_label.get(
+                    'similar_label', [])
+                print(st.session_state.get('global_username'))
 
-        st.session_state.plt_value_text = st.session_state.plt_value.get(
-            'need2labeltext', None)
-        st.session_state.plt_vlaue_similist = st.session_state.plt_value.get(
-            'similar_label', None)
+                st.session_state.alllabel = st.session_state.conback2_value.get_label(
+                    project_name=st.session_state.get('01select_project_value')
+                )
 
 
-with st.form(key="login"):
-    st.selectbox(label='项目名称', index=0,
-                 options=st.session_state.value_project_list,
-                 key='04_modify_project_name')
+            st.form_submit_button(label='确定项目', on_click=pjl)
 
-    # gl_project_name = st.session_state.get('04_modify_project_name', None)
+            st.markdown("## 2. 打标部分")
+            st.text_input(
+                label='待打标标签', value=st.session_state.text_button_01, key='b1_value')
 
-    with st.expander(label="02_进入打标页面", expanded=True):
-        st.text_area(label="show_text",
-                     value=st.session_state.plt_value_text, key="text_02_needtext")
+            tab1, tab2 = st.tabs(['模型推荐列表', '全部标签'])
 
-        tab1, tab2 = st.tabs(["算法推荐", "主动搜索"])
-        with tab1:
+            with tab1:
+                st.radio(label='模型推荐',
+                         options=st.session_state.simi_button_02, key='b2_value')
 
-            similar_text_list = st.session_state.plt_vlaue_similist
-            st.radio(label="模型推荐", options=similar_text_list,
-                     horizontal=True,
-                     index=0, key="text_02_similar_list")
 
-            def func_sub_modelsimi():
-                Update_Conback()
-                cur_need_text = st.session_state.get('text_02_needtext')
-                cur_user_label = st.session_state.get('text_02_similar_list')
+                def submitResult_callback():
+                    text = st.session_state.get('b1_value')
+                    label = st.session_state.get('b2_value')
+                    project_name = st.session_state.get('01select_project_value')
+                    # names = 'yuanz'
 
-                print(f'text: {cur_need_text}, label: {cur_user_label}')
+                    st.session_state.conback2_value.save_result(
+                        project_name=project_name,
+                        text=text,
+                        label=label,
+                        username=st.session_state.get('global_username'))
 
-            st.form_submit_button(
-                label="提交选择",
-                on_click=func_sub_modelsimi
-            )
+                    # 再次更新需要打标的内容
+                    st.session_state.pair_text_label = st.session_state.conback2_value.get_text(
+                        project_name=st.session_state.get('01select_project_value')
+                    )
+                    st.session_state.text_button_01 = st.session_state.pair_text_label.get(
+                        'need2labeltext', '')
+                    st.session_state.simi_button_02 = st.session_state.pair_text_label.get(
+                        'similar_label', [])
 
-        # with tab2:
-        #     st.selectbox(label="搜索推荐", options=)
-            # st.text_input(label="搜索推荐", value='',
-            #               placeholder="输入搜索的关键词", key="text_02_search")
+
+                st.form_submit_button(
+                    label='提交打标结果', on_click=submitResult_callback)
+
+            with tab2:
+                st.selectbox(label='所有标签',
+                             options=st.session_state.alllabel,
+                             key='tuijianlabel')
+
+
+                def submitResult_callback2():
+                    select_input = st.session_state.get('tuijianlabel', None)
+                    if select_input is not None:
+                        text = st.session_state.get('b1_value')
+                        label = select_input
+                        project_name = st.session_state.get('01select_project_value')
+                        # names = name
+                        st.session_state.conback2_value.save_result(
+                            project_name=project_name,
+                            text=text,
+                            label=label,
+                            username=st.session_state.get('global_username'))
+
+                        # 再次更新需要打标的内容
+                        st.session_state.pair_text_label = st.session_state.conback2_value.get_text(
+                            project_name=st.session_state.get('01select_project_value')
+                        )
+                        st.session_state.text_button_01 = st.session_state.pair_text_label.get(
+                            'need2labeltext', '')
+                        st.session_state.simi_button_02 = st.session_state.pair_text_label.get(
+                            'similar_label', [])
+
+
+                st.form_submit_button(label='提交自己搜索结果', on_click=submitResult_callback2)
+
+    authenticator.logout('Logout', 'main')
+    st.write(f'Welcome *{name}*')
+
+elif authentication_status == False:
+    st.error('Username/password is incorrect')
+elif authentication_status == None:
+    st.warning('Please enter your username and password')
+
+

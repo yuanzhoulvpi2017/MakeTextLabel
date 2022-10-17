@@ -58,10 +58,11 @@ class UserInfo:
 
 class ManageUser:
     def __init__(self) -> None:
-        self.adminyaml()
         user_path = Path(__file__).parent.parent.joinpath('users')
         self.user_df_file = user_path.joinpath("users.csv")
         os.makedirs(name=user_path, exist_ok=True)
+        self.adminyaml()
+
 
         if self.user_df_file.exists():
             user_df = pd.read_csv(self.user_df_file)
